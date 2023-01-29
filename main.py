@@ -1,103 +1,56 @@
+import subprocess
 import os
 import json
 from flask import Flask
 from flask import request
 from flask import jsonify
 import functions_framework
-from slack.signature import SignatureVerifier
-import requests
-from jinja2 import Environment, FileSystemLoader
+import csv
+from sys import stdout
+import argparse
+from subprocess import run, PIPE
+import datetime
+import sys
 
-app = Flask(__name__)
+api_name = os.environ['API_NAME'] #"compute"
+bucket = os.environ['BUCKET']#"gs://gcp-tags"
+project_id = os.environ['PROJECT'] #"mineral-anchor-361313"
 
-def trigger_pd_incident(request):
-    # Triggers a PagerDuty incident without a previously generated incident key
-    # Uses Events V2 API - documentation: https://v2.developer.pagerduty.com/docs/send-an-event-events-api-v2
+def api_found(api_string):
+    api_present = os.system("gcloud services list --enabled --project {} > api_present.txt".format(project_id))
+    #print(api_present)
 
-    header = {
-        "Content-Type": "application/json"
-    }
+    with open("api_present.txt", "r") as api_file:
+        contents = api_file.read()
+        if api_string in contents:
+            return 1
 
-    payload = { # Payload is built with the least amount of fields required to trigger an incident
-        "routing_key": os.environ['ROUTING_KEY'], 
-        "event_action": "trigger",
-        "payload": {
-            "summary": request.form['text'],
-            "source": "Triggered using Slash command: firealarm",
-            "severity": "critical"
-        }
-    }
-
-    response = requests.post('https://events.pagerduty.com/v2/enqueue', 
-                            data=json.dumps(payload),
-                            headers=header)
-	
-    if response.json()["status"] == "success":
-        print('Incident created with with dedup key (also known as incident / alert key) of ' + '"' + response.json()['dedup_key'] + '"') 
+def compute_disks_enabled(api_name, project_id, bucket):
+    if api_found(api_name):
+        cmd = run(['gcloud compute disks list --project='+project_id+ ' ' + '--format=\"csv(name, labels.owner, labels.sponsor,labels.workload, labels.resource, labels.environment)\"'], stdout=PIPE, shell=True)
+        disks = cmd.stdout.decode('utf-8')
+        filename = "compute_disk.csv"
+        file = open(filename, "w")
+        file.write(disks)
+        file.close()
+        run(['gsutil cp '+filename+' '+bucket], shell=True)
     else:
-        print(response.text) # print error message if not successful
+        print("Compute API is not enabled") 
+        
 
-def send_message_to_slack_channel(request):
-  user_name = request.form['user_name']
-  channel_name = request.form['channel_name']
-  text = request.form['text']
-
-  message = ("Incident was triggered by"+ '\t' + str(user_name) + '\t' + "in the channel" + '\t' + str(channel_name))
-  title = (f"{text}")
-  slack_data = {
-      "username": user_name,
-      "icon_emoji": ":satellite:",
-      "channel" : channel_name,
-      "blocks": [
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": "Incident Description:" + '\t' + str(title) + '\n' + "Trigged by:" + '\t' + str(user_name) + '\n' + "Triggered in channel:" + '\t' + str(channel_name),
-			}
-		}
-	]
-  }
-  
-  headers = {'Content-Type': "application/json"}
-  response = requests.post(os.environ['WEBHOOK_URL'], data=json.dumps(slack_data), headers=headers)
-  if response.status_code != 200:
-      print(response.status_code, response.text)
-
-def format_message_slack(request):
-  user_name = request.form['user_name']
-  channel_name = request.form['channel_name']
-  text = request.form['text']
-  message = {
-        'response_type': 'in_channel',
-        'text': f'Incident Name: {text}. Username: {user_name}, Channel Name: {channel_name}',
-    }
-  return message
-
-# [START functions_verify_webhook]
-def verify_signature(request):
-    request.get_data()  # Decodes received requests into request.data
-    verifier = SignatureVerifier(os.environ['SLACK_SECRET'])
-    if not verifier.is_valid_request(request.data, request.headers):
-        raise ValueError('Invalid request/credentials.')
-# [END functions_verify_webhook]
 
 @app.route("/")
 def home():
   return "It Works!"
 
-@app.route("/firealarm", methods=["POST"])
-def slack_firealarm():
-  # Your code here
+@app.route("/tagging", methods=["POST"])
+def gcp_tagging():
   if request.method != 'POST':
         return 'Only POST requests are accepted', 405
-
-  verify_signature(request)
-  trigger_pd_incident(request)
-  res = format_message_slack(request)
-  send_message_to_slack_channel(request)
+    
+  compute_disks_enabled(api_name, project_id, bucket)
   # Return an HTTP response
-  return jsonify(res)
-
+  return "Tagging CSVs added successfully"
+    
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
