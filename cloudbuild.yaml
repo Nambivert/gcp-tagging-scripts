@@ -7,6 +7,6 @@ steps:
   
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'cloud-run-firealarm-slash-command', '--image', 'northamerica-northeast1-docker.pkg.dev/mineral-anchor-361313/gcp-tagging/tag-image:$COMMIT_SHA', '--region', 'northamerica-northeast1']
+  args: ['run', 'deploy', 'cloud-run-tagging', '--image', 'northamerica-northeast1-docker.pkg.dev/mineral-anchor-361313/gcp-tagging/tag-image:$COMMIT_SHA', '--region', 'northamerica-northeast1']
 options:
   logging: CLOUD_LOGGING_ONLY
