@@ -15,7 +15,12 @@ COPY . ./
 RUN apk add --update \
  curl \
  which \
- bash
+ bash \
+ python3-dev \
+ py-pip \
+ gcc \
+ g++ \
+ libc-dev
 
  RUN curl -sSL https://sdk.cloud.google.com | bash
 
