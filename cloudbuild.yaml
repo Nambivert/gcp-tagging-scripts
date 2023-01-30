@@ -21,10 +21,9 @@ steps:
   - 'northamerica-northeast1'
   - '--set-env-vars="FLASK_PORT=8080"'
   - '--set-env-vars="API_NAME=compute"'
-  - '--set-env-vars="PROJECT=mineral-anchor-361313"'
   - '--set-env-vars="gs://gcp-tags"'
   - '-trigger-http'
   - '--no-allow-unauthenticated'
-  
+
 options:
   logging: CLOUD_LOGGING_ONLY
