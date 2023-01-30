@@ -44,14 +44,7 @@ def compute_disks_enabled(api_name, project_id, bucket):
 def home():
   return "It Works!"
 
-@app.route("/tagging", methods=["POST"])
-def gcp_tagging():
-  if request.method != 'POST':
-        return 'Only POST requests are accepted', 405
-    
-  compute_disks_enabled(api_name, project_id, bucket)
-  # Return an HTTP response
-  return "Tagging CSVs added successfully"
+
     
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
