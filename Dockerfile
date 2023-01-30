@@ -1,7 +1,7 @@
 
 # Use the official lightweight Python image.
 # https://hub.docker.com/_/python
-FROM python:alpine
+FROM python:latest
 
 # Allow statements and log messages to immediately appear in the Knative logs
 ENV PYTHONUNBUFFERED True
@@ -12,15 +12,17 @@ WORKDIR $APP_HOME
 COPY . ./
 
 #Install Gcloud
-RUN apk add --update \
- curl \
- which \
- bash \
- python3-dev \
- py-pip \
- gcc \
- g++ \
- libc-dev
+RUN apt-get update && apt-get install -y  \
+    apt-transport-https \
+    ca-certificates \
+    software-properties-common \
+    gnupg2 \
+    curl \
+    bash \
+    python3-dev \
+    gcc \
+    g++ \
+    libc-dev
 
  RUN curl -sSL https://sdk.cloud.google.com | bash
 
