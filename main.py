@@ -96,7 +96,9 @@ def compute_images_tags(api_name, project_id, bucket):
     else:
         print("Cannot list images!, Compute API is not enabled") 
 
-def bigtable_instances_tags(api_name, project_id, bucket):
+def bigtable_instances_tags(project_id, bucket):
+    api_name = "bigtableadmin"
+    if api_found(api_name):
         cmd = run(['gcloud bigtable instances list --project='+project_id+ ' ' + '--format=\"csv(name, labels.owner, labels.sponsor,labels.workload, labels.resource, labels.environment)\"'], stdout=PIPE, shell=True)
         bt_instances = cmd.stdout.decode('utf-8')
         filename = "tags-bigtable_instances.csv"
@@ -104,6 +106,8 @@ def bigtable_instances_tags(api_name, project_id, bucket):
         file.write(bt_instances)
         file.close()
         run(['gsutil cp '+filename+' '+bucket+'/'+project_id+'/'], shell=True)
+    else:
+        print("Cannot list images!, Compute API is not enabled")
 
 def pubsub_subscriptions_tags(api_name, project_id, bucket):
         cmd = run(['gcloud pubsub subscriptions list --project='+project_id+ ' ' + '--format=\"csv(name, labels.owner, labels.sponsor,labels.workload, labels.resource, labels.environment)\"'], stdout=PIPE, shell=True)
@@ -175,7 +179,7 @@ def gcp_tagging():
     compute_disks_tags(api_name, project_id, bucket)
     compute_snapshots_tags(api_name, project_id, bucket)
     compute_images_tags(api_name, project_id, bucket)
-    bigtable_instances_tags(api_name, project_id, bucket)
+    bigtable_instances_tags(project_id, bucket)
     pubsub_subscriptions_tags(api_name, project_id, bucket)
     pubsub_topics_tags(api_name, project_id, bucket)
     compute_forwarding_rules_tags(api_name, project_id, bucket)
