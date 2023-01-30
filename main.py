@@ -15,7 +15,7 @@ import sys
 app = Flask(__name__)
 api_name = os.environ['API_NAME'] #"compute"
 bucket = os.environ['BUCKET']#"gs://gcp-tags"
-#project_id = os.environ['PROJECT'] #"mineral-anchor-361313"
+project_id = os.environ['PROJECT'] #"mineral-anchor-361313"
 
 def api_found(api_string):
     api_present = os.system("gcloud services list --enabled --project {} > api_present.txt".format(project_id))
