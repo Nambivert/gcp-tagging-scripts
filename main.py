@@ -165,25 +165,25 @@ def home():
 
 @app.route("/tagging", methods=["POST"])
 def gcp_tagging():
-  if request.method != 'POST':
+    if request.method != 'POST':
         return 'Only POST requests are accepted', 405
-  #Trigger all functions
-  get_projects()
-  with open("project_list.txt", "r") as project_list:
-    for project_id in project_list:
-        compute_instances_tags(api_name, project_id, bucket)
-        compute_disks_tags(api_name, project_id, bucket)
-        compute_snapshots_tags(api_name, project_id, bucket)
-        compute_images_tags(api_name, project_id, bucket)
-        bigtable_instances_tags(api_name, project_id, bucket)
-        pubsub_subscriptions_tags(api_name, project_id, bucket)
-        pubsub_topics_tags(api_name, project_id, bucket)
-        compute_forwarding_rules_tags(api_name, project_id, bucket)
-        compute_vpn_tunnels_tags(api_name, project_id, bucket)
-        compute_external_ip_tags(api_name, project_id, bucket)
-        create_excel(project_id, bucket)
-  # Return an HTTP response
-  return "Tagging CSVs added successfully"
+    #Trigger all functions
+    #get_projects()
+    #with open("project_list.txt", "r") as project_list:
+    # for project_id in project_list:
+    compute_instances_tags(api_name, project_id, bucket)
+    compute_disks_tags(api_name, project_id, bucket)
+    compute_snapshots_tags(api_name, project_id, bucket)
+    compute_images_tags(api_name, project_id, bucket)
+    bigtable_instances_tags(api_name, project_id, bucket)
+    pubsub_subscriptions_tags(api_name, project_id, bucket)
+    pubsub_topics_tags(api_name, project_id, bucket)
+    compute_forwarding_rules_tags(api_name, project_id, bucket)
+    compute_vpn_tunnels_tags(api_name, project_id, bucket)
+    compute_external_ip_tags(api_name, project_id, bucket)
+    create_excel(project_id, bucket)
+    # Return an HTTP response
+    return "Tagging CSVs added successfully"
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
