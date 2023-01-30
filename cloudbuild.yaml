@@ -23,7 +23,6 @@ steps:
   - '--set-env-vars="API_NAME=compute"'
   - '--set-env-vars="PROJECT=mineral-anchor-361313"'
   - '--set-env-vars="BUCKET=gs://gcp-tags"'
-  - '-trigger-http'
   - '--no-allow-unauthenticated'
   
 options:
