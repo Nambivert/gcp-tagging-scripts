@@ -1,4 +1,5 @@
 import subprocess
+import pandas as pd
 import os
 import json
 from flask import Flask
@@ -34,7 +35,19 @@ def get_projects():
   file.write(gcp_projects)
   file.close()
   #print(gcp_projects)
-  
+
+def create_excel(project_id, bucket):
+    csv_files = ['tags-compute_instances.csv', 'tags-compute_disks.csv', 'tags-compute_snapshots.csv', 'tags-compute_images.csv', 'tags-bigtable_instances.csv', 'tags-pubsub_subscriptions.csv', 'tags-pubsub_topics.csv', 'tags-forwarding_rules.csv', 'tags-vpn_tunnels.csv', 'tags-external_ip.csv']
+    date = datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+    filename = "GCP_Tagging"+"_"+project_id+"_"+date
+    writer = pd.ExcelWriter(filename+'.xlsx', engine='openpyxl')
+    for csv_file in csv_files:
+        df = pd.read_csv(csv_file)
+        sheet_name = os.path.splitext(csv_file)[0]
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+    writer.close()
+    run(['gsutil cp '+filename+' '+bucket+'/'+project_id+'/'], shell=True)
+    
 def compute_instances_tags(api_name, project_id, bucket):
     if api_found(api_name):
         cmd = run(['gcloud compute instances list --quiet --verbosity=none --project='+project_id+ ' ' + '--format=\"csv(name, labels.owner, labels.sponsor,labels.workload, labels.resource, labels.environment)\"'], stdout=PIPE, shell=True)
@@ -158,10 +171,6 @@ def gcp_tagging():
   get_projects()
   with open("project_list.txt", "r") as project_list:
     for project_id in project_list:
-        #print(project)
-        #cmd = run(['gcloud compute instances list --format=\"value(NAME)\" --project=' + project], stdout=PIPE, shell=True)
-        #instances = cmd.stdout.decode('utf-8')
-        #print(instances)  
         compute_instances_tags(api_name, project_id, bucket)
         compute_disks_tags(api_name, project_id, bucket)
         compute_snapshots_tags(api_name, project_id, bucket)
@@ -172,6 +181,7 @@ def gcp_tagging():
         compute_forwarding_rules_tags(api_name, project_id, bucket)
         compute_vpn_tunnels_tags(api_name, project_id, bucket)
         compute_external_ip_tags(api_name, project_id, bucket)
+        create_excel(project_id, bucket)
   # Return an HTTP response
   return "Tagging CSVs added successfully"
 
