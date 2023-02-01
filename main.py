@@ -14,9 +14,8 @@ import datetime
 import sys
 
 app = Flask(__name__)
-api_name = os.environ['API_NAME'] #"compute"
-bucket = os.environ['BUCKET']#"gs://gcp-tags"
-project_id = os.environ['PROJECT'] #"mineral-anchor-361313"
+
+#project_id = os.environ['PROJECT'] #"mineral-anchor-361313"
 
 def api_found(api_string):
     api_present = os.system("gcloud services list --enabled --project {} > api_present.txt".format(project_id))
@@ -175,6 +174,14 @@ def gcp_tagging():
     #get_projects()
     #with open("project_list.txt", "r") as project_list:
     # for project_id in project_list:
+    
+    #Intialize project vars
+    api_name = os.environ['API_NAME'] #"compute"
+    bucket = os.environ['BUCKET']#"gs://gcp-tags"
+    project_id = os.environ['PROJECT']
+    # Set the project
+    os.system("gcloud config set project {}".format(project_id))
+    #Run the functions
     compute_instances_tags(api_name, project_id, bucket)
     compute_disks_tags(api_name, project_id, bucket)
     compute_snapshots_tags(api_name, project_id, bucket)
